@@ -1,0 +1,35 @@
+📝 Léo Vidros - Microsserviço de Orçamentos (Async)
+Este é um microsserviço assíncrono projetado para processar a geração de orçamentos em PDF para a Léo Vidros. Ele opera de forma independente da API principal, consumindo mensagens via RabbitMQ e aplicando os princípios da Clean Architecture.
+
+🚀 Funcionalidades
+Processamento Assíncrono: Escuta a fila de novos orçamentos para não travar a API principal.
+
+Geração de PDF: Transforma os dados do orçamento em um documento profissional.
+
+Armazenamento Local: Salva os documentos em um diretório configurável via variáveis de ambiente.
+
+Isolamento de Negócio: Não possui dependência direta com o banco de dados da aplicação principal.
+
+🏗️ Arquitetura
+O projeto segue a Clean Architecture, dividida em:
+
+Domain/Entities: Contém os DTOs que representam o contrato de dados do orçamento.
+
+Application (Use Cases): Orquestra a lógica de geração, sem conhecer detalhes de infraestrutura (como bibliotecas de PDF ou RabbitMQ).
+
+Interface Adapters:
+
+RabbitMQListener: Gatilho que inicia o processo ao receber uma mensagem.
+
+OpenPdfAdapter: Implementação técnica da geração do documento.
+
+Infrastructure: Configurações de frameworks (Spring AMQP), Docker e sistemas de arquivos.
+
+🛠️ Tecnologias
+Java 17+ & Spring Boot 3
+
+RabbitMQ: Message Broker para comunicação assíncrona.
+
+OpenPDF: Biblioteca para manipulação de documentos PDF.
+
+Docker & Docker Compose: Para orquestração de containers.
