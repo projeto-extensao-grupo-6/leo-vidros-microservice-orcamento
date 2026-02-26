@@ -1,0 +1,48 @@
+server:
+  servlet:
+    context-path: /api
+  port: ${SERVER_PORT:3000}
+  error:
+    include-message: never
+    include-binding-errors: never
+    include-stacktrace: never
+    include-exception: false
+  forward-headers-strategy: framework
+
+spring:
+  application:
+    name: extension-project-api
+
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USER:guest}
+    password: ${RABBITMQ_PASS:guest}
+    template:
+      retry:
+        enabled: true
+        initial-interval: 1000ms
+        max-attempts: 3
+
+  datasource:
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3307}/${DB_NAME:db_extension}
+    username: ${DB_USER:myuser}
+    password: ${DB_PASS:secret}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+      jdbc:
+        time_zone: UTC
+
+jwt:
+  secret: ${JWT_SECRET:minha_chave_secreta_padrao_para_dev_123}
+
+app:
+  environment: ${APP_ENV:development}
+  orcamento:
+    diretorio: ${PDF_STORAGE_PATH:./storage/orcamentos}

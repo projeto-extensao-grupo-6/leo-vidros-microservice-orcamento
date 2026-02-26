@@ -1,0 +1,28 @@
+services:
+  mysql:
+    image: 'mysql:8.4'
+    environment:
+      - MYSQL_DATABASE=${DB_NAME}
+      - MYSQL_PASSWORD=${DB_PASS}
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_USER=${DB_USER}
+    ports:
+      - '${DB_PORT}:3306' # Mapeia a porta do .env (3307) para a interna (3306)
+    networks:
+      - leovidros-network
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq-leovidros
+    ports:
+      - "${RABBITMQ_PORT}:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS}
+    networks:
+      - leovidros-network
+
+networks:
+  leovidros-network:
+    driver: bridge
