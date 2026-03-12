@@ -8,7 +8,6 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class BeanConfig {
-
     @Bean
     public GerarPdfUseCase gerarPdfUseCase(PdfGenerator pdfGenerator, PdfStorageService storageService) {
         return new GerarPdfUseCase(pdfGenerator, storageService);

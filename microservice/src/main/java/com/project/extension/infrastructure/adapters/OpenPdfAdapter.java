@@ -7,6 +7,7 @@ import com.lowagie.text.*;
 import com.lowagie.text.pdf.PdfPCell;
 import com.lowagie.text.pdf.PdfPTable;
 import com.lowagie.text.pdf.PdfWriter;
+import com.project.extension.domain.exception.GeracaoPdfException;
 import org.springframework.stereotype.Component;
 
 import java.io.ByteArrayOutputStream;
@@ -76,7 +77,7 @@ public class OpenPdfAdapter implements PdfGenerator {
 
             document.close();
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new GeracaoPdfException("Falha ao gerar o conteúdo do PDF para o orçamento: " + dados.numeroOrcamento(), e);
         }
 
         return out.toByteArray();

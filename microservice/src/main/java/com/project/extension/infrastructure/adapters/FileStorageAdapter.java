@@ -1,6 +1,7 @@
 package com.project.extension.infrastructure.adapters;
 
 import com.project.extension.application.ports.PdfStorageService;
+import com.project.extension.domain.exception.GeracaoPdfException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -27,8 +28,7 @@ public class FileStorageAdapter implements PdfStorageService {
 
             System.out.println("✅ Arquivo salvo fisicamente em: " + caminhoCompleto.toAbsolutePath());
         } catch (Exception e) {
-            // Aqui depois você vai lançar sua Exception Personalizada
-            throw new RuntimeException("Erro ao persistir arquivo no disco", e);
+            throw new GeracaoPdfException("Erro crítico ao gravar o arquivo " + nomeArquivo + " no armazenamento.", e);
         }
     }
 }
