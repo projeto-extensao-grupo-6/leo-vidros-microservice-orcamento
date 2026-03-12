@@ -3,6 +3,7 @@ package com.project.extension.application.usecases;
 import com.project.extension.application.ports.PdfGenerator;
 import com.project.extension.application.ports.PdfStorageService;
 import com.project.extension.domain.dto.OrcamentoDTO;
+import com.project.extension.domain.entities.Orcamento;
 
 public class GerarPdfUseCase {
     private final PdfGenerator pdfGenerator;
@@ -14,6 +15,14 @@ public class GerarPdfUseCase {
     }
 
     public void executar(OrcamentoDTO dados) {
+        Orcamento orcamento = new Orcamento(
+                dados.id(),
+                dados.numeroOrcamento(),
+                dados.cliente().nome(),
+                dados.valorTotal()
+                // dados.itens()
+        );
+
         byte[] pdf = pdfGenerator.generateFromOrcamento(dados);
         String nomeArquivo = "orcamento_" + dados.numeroOrcamento() + ".pdf";
         pdfStorageService.salvar(pdf, nomeArquivo);
