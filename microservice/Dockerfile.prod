@@ -1,0 +1,19 @@
+FROM maven:3.9.6-eclipse-temurin-21 AS build
+WORKDIR /build
+COPY pom.xml .
+COPY src ./src
+RUN mvn -B -DskipTests package
+
+FROM bellsoft/liberica-openjre-debian:21-cds
+WORKDIR /application
+
+COPY --from=build /build/target/*.jar application.jar
+
+RUN adduser --system --group spring && \
+    mkdir -p /storage/orcamentos && \
+    chown -R spring:spring /storage && \
+    chmod -R 755 /storage
+
+USER spring:spring
+
+ENTRYPOINT ["java", "-XX:SharedArchiveFile=application.jsa", "-jar", "application.jar"]
