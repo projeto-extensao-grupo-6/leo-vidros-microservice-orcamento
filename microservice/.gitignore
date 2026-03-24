@@ -32,3 +32,15 @@ build/
 ### VS Code ###
 .vscode/
 .env
+
+# Arquivos gerados pela aplicação
+storage/
+*.pdf
+
+# Arquivos de log e temporários
+*.log
+temp/
+
+# Sistema Operacional
+.DS_Store
+Thumbs.db
