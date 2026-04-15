@@ -4,7 +4,15 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="5a609157-8a4e-4a37-af1e-e920191e1a82" name="Changes" comment="" />
+    <list default="true" id="5a609157-8a4e-4a37-af1e-e920191e1a82" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/jarRepositories.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/jarRepositories.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/microservice/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/microservice/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/microservice/src/main/java/com/project/extension/infrastructure/adapters/ExcelTemplateAdapter.java" beforeDir="false" afterPath="$PROJECT_DIR$/microservice/src/main/java/com/project/extension/infrastructure/adapters/ExcelTemplateAdapter.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/microservice/src/main/java/com/project/extension/infrastructure/config/BeanConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/microservice/src/main/java/com/project/extension/infrastructure/config/BeanConfig.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/microservice/src/main/java/com/project/extension/infrastructure/queue/RabbitMQListener.java" beforeDir="false" afterPath="$PROJECT_DIR$/microservice/src/main/java/com/project/extension/infrastructure/queue/RabbitMQListener.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/microservice/src/main/resources/application.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/microservice/src/main/resources/application.yaml" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -42,7 +50,7 @@
     "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
     "RunOnceActivity.git.unshallow": "true",
     "SHARE_PROJECT_CONFIGURATION_FILES": "true",
-    "git-widget-placeholder": "main",
+    "git-widget-placeholder": "feat/conversaoExcelPDF",
     "kotlin-language-version-configured": "true",
     "last_opened_file_path": "/home/phelipe-bruione/Desktop/ProjetoPi/3sem/api-rest",
     "project.structure.last.edited": "Modules",
@@ -80,5 +88,16 @@
       <updated>1772066265142</updated>
     </task>
     <servers />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/microservice/src/main/java/com/project/extension/infrastructure/adapters/ExcelTemplateAdapter.java</url>
+          <line>32</line>
+          <option name="timeStamp" value="1" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
 </project>
