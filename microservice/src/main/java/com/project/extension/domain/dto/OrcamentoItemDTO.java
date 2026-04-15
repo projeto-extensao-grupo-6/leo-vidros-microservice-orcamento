@@ -6,5 +6,5 @@ public record OrcamentoItemDTO(
         Double precoUnitario,
         Double desconto,
         Double subtotal,
-        String Observacao
+        String observacao
 ) {}

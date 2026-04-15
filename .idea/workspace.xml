@@ -5,13 +5,12 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="5a609157-8a4e-4a37-af1e-e920191e1a82" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/jarRepositories.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/jarRepositories.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/microservice/src/main/java/com/project/extension/domain/entities/OrcamentoItem.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/microservice/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/microservice/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/microservice/src/main/java/com/project/extension/infrastructure/adapters/ExcelTemplateAdapter.java" beforeDir="false" afterPath="$PROJECT_DIR$/microservice/src/main/java/com/project/extension/infrastructure/adapters/ExcelTemplateAdapter.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/microservice/src/main/java/com/project/extension/infrastructure/config/BeanConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/microservice/src/main/java/com/project/extension/infrastructure/config/BeanConfig.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/microservice/src/main/java/com/project/extension/infrastructure/queue/RabbitMQListener.java" beforeDir="false" afterPath="$PROJECT_DIR$/microservice/src/main/java/com/project/extension/infrastructure/queue/RabbitMQListener.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/microservice/src/main/resources/application.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/microservice/src/main/resources/application.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/microservice/src/main/java/com/project/extension/application/usecases/GerarPdfUseCase.java" beforeDir="false" afterPath="$PROJECT_DIR$/microservice/src/main/java/com/project/extension/application/usecases/GerarPdfUseCase.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/microservice/src/main/java/com/project/extension/domain/dto/OrcamentoItemDTO.java" beforeDir="false" afterPath="$PROJECT_DIR$/microservice/src/main/java/com/project/extension/domain/dto/OrcamentoItemDTO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/microservice/src/main/java/com/project/extension/domain/entities/Orcamento.java" beforeDir="false" afterPath="$PROJECT_DIR$/microservice/src/main/java/com/project/extension/domain/entities/Orcamento.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/storage/orcamentos/orcamento_ORC-2026-001.pdf" beforeDir="false" afterPath="$PROJECT_DIR$/storage/orcamentos/orcamento_ORC-2026-001.pdf" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

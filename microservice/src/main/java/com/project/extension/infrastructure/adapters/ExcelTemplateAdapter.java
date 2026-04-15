@@ -14,14 +14,12 @@ import org.springframework.stereotype.Component;
 import java.io.*;
 import java.net.URI;
 import java.net.http.HttpClient;
-import java.net.http.HttpRequest; // CERTIFIQUE-SE QUE É java.net.http.HttpRequest
-import java.net.http.HttpRequest.BodyPublishers; // IMPORTANTE PARA O POST
+import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.List;
 
 @Component
 public class ExcelTemplateAdapter implements PdfGenerator {
-
     @Autowired
     private ResourceLoader resourceLoader;
 
