@@ -8,15 +8,14 @@ public class Orcamento {
     private final String numero;
     private final String clienteNome;
     private final Double valorTotal;
-    // private final List<?> itens; // No futuro, criar  a entity OrcamentoItem
+    private final List<OrcamentoItem> itens;
 
-    public Orcamento(Long id, String numero, String clienteNome, Double valorTotal/*, List<?> itens*/) {
+    public Orcamento(Long id, String numero, String clienteNome, Double valorTotal, List<OrcamentoItem> itens) {
         this.id = id;
         this.numero = numero;
         this.clienteNome = clienteNome;
         this.valorTotal = valorTotal;
-       // this.itens = itens;
-
+        this.itens = itens;
         validar();
     }
 
@@ -27,9 +26,9 @@ public class Orcamento {
         if (clienteNome == null || clienteNome.isBlank()) {
             throw new GeracaoPdfException("Regra de Negócio: O nome do cliente é obrigatório para emissão de PDF.");
         }
-//        if (itens == null || itens.isEmpty()) {
-//            throw new GeracaoPdfException("Regra de Negócio: Não é possível gerar orçamento sem itens.");
-//        }
+        if (itens == null || itens.isEmpty()) {
+            throw new GeracaoPdfException("Regra de Negócio: Não é possível gerar orçamento sem itens.");
+        }
         if (valorTotal == null || valorTotal <= 0) {
             throw new GeracaoPdfException("Regra de Negócio: O valor total do orçamento deve ser positivo.");
         }
@@ -39,4 +38,5 @@ public class Orcamento {
     public String getNumero() { return numero; }
     public String getClienteNome() { return clienteNome; }
     public Double getValorTotal() { return valorTotal; }
+    public List<OrcamentoItem> getItens() { return itens; }
 }

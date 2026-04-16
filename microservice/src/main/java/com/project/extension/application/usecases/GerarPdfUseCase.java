@@ -4,6 +4,9 @@ import com.project.extension.application.ports.PdfGenerator;
 import com.project.extension.application.ports.PdfStorageService;
 import com.project.extension.domain.dto.OrcamentoDTO;
 import com.project.extension.domain.entities.Orcamento;
+import com.project.extension.domain.entities.OrcamentoItem;
+
+import java.util.List;
 
 public class GerarPdfUseCase {
     private final PdfGenerator pdfGenerator;
@@ -15,18 +18,25 @@ public class GerarPdfUseCase {
     }
 
     public void executar(OrcamentoDTO dados) {
+        List<OrcamentoItem> itensDomain = dados.itens().stream()
+                .map(dto -> new OrcamentoItem(
+                        dto.descricao(),
+                        dto.quantidade(),
+                        dto.precoUnitario(),
+                        dto.observacao()
+                )).toList();
+
         Orcamento orcamento = new Orcamento(
                 dados.id(),
                 dados.numeroOrcamento(),
                 dados.cliente().nome(),
-                dados.valorTotal()
-                // dados.itens()
+                dados.valorTotal(),
+                itensDomain
         );
 
         byte[] pdf = pdfGenerator.generateFromOrcamento(dados);
         String nomeArquivo = "orcamento_" + dados.numeroOrcamento() + ".pdf";
         pdfStorageService.salvar(pdf, nomeArquivo);
         System.out.println("Log: Processamento do caso de uso concluído para " + nomeArquivo);
-
     }
 }

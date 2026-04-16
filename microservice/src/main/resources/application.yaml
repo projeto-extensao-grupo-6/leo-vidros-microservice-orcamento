@@ -48,3 +48,4 @@ app:
   environment: ${APP_ENV:development}
   orcamento:
     diretorio: ${PDF_STORAGE_PATH:./storage/orcamentos}
+    template-path: "classpath:templates/orçamento.xlsx"

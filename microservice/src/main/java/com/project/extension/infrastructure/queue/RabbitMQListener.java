@@ -18,7 +18,7 @@ public class RabbitMQListener {
     public void receberMensagem(OrcamentoDTO payload) {
         try
         {
-            System.out.println("Mensagem recebida da fila para o ID: " + payload.id());
+            System.out.printf("Mensagem recebida da fila para o orcamento do ID: %d e número: %s\n", payload.id(), payload.numeroOrcamento());
             useCase.executar(payload);
 
         } catch (GeracaoPdfException e) {
