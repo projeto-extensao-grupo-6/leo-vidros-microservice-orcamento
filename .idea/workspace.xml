@@ -5,12 +5,14 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="5a609157-8a4e-4a37-af1e-e920191e1a82" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/microservice/src/main/java/com/project/extension/domain/entities/OrcamentoItem.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/microservice/src/main/java/com/project/extension/infrastructure/adapters/S3StorageAdapter.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/microservice/src/main/java/com/project/extension/infrastructure/config/AwsConfig.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/microservice/src/main/java/com/project/extension/application/usecases/GerarPdfUseCase.java" beforeDir="false" afterPath="$PROJECT_DIR$/microservice/src/main/java/com/project/extension/application/usecases/GerarPdfUseCase.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/microservice/src/main/java/com/project/extension/domain/dto/OrcamentoItemDTO.java" beforeDir="false" afterPath="$PROJECT_DIR$/microservice/src/main/java/com/project/extension/domain/dto/OrcamentoItemDTO.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/microservice/src/main/java/com/project/extension/domain/entities/Orcamento.java" beforeDir="false" afterPath="$PROJECT_DIR$/microservice/src/main/java/com/project/extension/domain/entities/Orcamento.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/storage/orcamentos/orcamento_ORC-2026-001.pdf" beforeDir="false" afterPath="$PROJECT_DIR$/storage/orcamentos/orcamento_ORC-2026-001.pdf" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/microservice/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/microservice/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/microservice/compose.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/microservice/compose.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/microservice/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/microservice/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/microservice/src/main/java/com/project/extension/infrastructure/adapters/FileStorageAdapter.java" beforeDir="false" afterPath="$PROJECT_DIR$/microservice/src/main/java/com/project/extension/infrastructure/adapters/FileStorageAdapter.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/microservice/src/main/resources/application.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/microservice/src/main/resources/application.yaml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -43,22 +45,49 @@
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
     "Application.MicroserviceApplication.executor": "Run",
+    "Application.Unnamed.executor": "Run",
     "Maven.microservice [clean].executor": "Run",
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
     "RunOnceActivity.git.unshallow": "true",
     "SHARE_PROJECT_CONFIGURATION_FILES": "true",
-    "git-widget-placeholder": "feat/conversaoExcelPDF",
+    "git-widget-placeholder": "main",
     "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "/home/phelipe-bruione/Desktop/ProjetoPi/3sem/api-rest",
+    "last_opened_file_path": "/home/phelipe-bruione/Desktop/ProjetoPi/3sem/leo-vidros-microsevice-orcamento/microservice/env.properties",
     "project.structure.last.edited": "Modules",
     "project.structure.proportion": "0.15",
     "project.structure.side.proportion": "0.2",
-    "settings.editor.selected.configurable": "preferences.general"
+    "settings.editor.selected.configurable": "preferences.pluginManager"
   }
 }]]></component>
   <component name="RunManager">
+    <configuration name="MicroserviceApplication" type="Application" factoryName="Application" activateToolWindowBeforeRun="false" nameIsGenerated="true">
+      <option name="ALTERNATIVE_JRE_PATH" value="21" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="true" />
+      <envs>
+        <env name="AWS_ACESS_KEY" value="ASIA2GF5JQXS6CB57XNN" />
+        <env name="AWS_SECRET_KEY" value="BglxIn0gBQE9koUrW7tk6CP7YI0RhGZejskkBRUC" />
+        <env name="AWS_REGION" value="sa-east-1" />
+      </envs>
+      <option name="MAIN_CLASS_NAME" value="com.project.extension.MicroserviceApplication" />
+      <module name="microservice" />
+      <extension name="net.ashald.envfile">
+        <option name="IS_ENABLED" value="true" />
+        <option name="IS_SUBST" value="false" />
+        <option name="IS_PATH_MACRO_SUPPORTED" value="false" />
+        <option name="IS_IGNORE_MISSING_FILES" value="false" />
+        <option name="IS_ENABLE_EXPERIMENTAL_INTEGRATIONS" value="false" />
+        <ENTRIES>
+          <ENTRY IS_ENABLED="true" PARSER="runconfig" IS_EXECUTABLE="false" />
+          <ENTRY IS_ENABLED="false" PARSER="env" IS_EXECUTABLE="false" PATH="microservice/.env" />
+          <ENTRY IS_ENABLED="true" PARSER="env" IS_EXECUTABLE="false" PATH="microservice/env.properties" />
+        </ENTRIES>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
     <configuration default="true" type="JetRunConfigurationType">
       <module name="leo-vidros-microsevice-orcamento" />
       <method v="2">
@@ -98,5 +127,9 @@
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
+  </component>
+  <component name="XSLT-Support.FileAssociations.UIState">
+    <expand />
+    <select />
   </component>
 </project>

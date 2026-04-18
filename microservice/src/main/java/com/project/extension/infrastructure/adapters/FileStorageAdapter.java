@@ -3,6 +3,7 @@ package com.project.extension.infrastructure.adapters;
 import com.project.extension.application.ports.PdfStorageService;
 import com.project.extension.domain.exception.GeracaoPdfException;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import java.nio.file.Files;
@@ -10,6 +11,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 @Component
+@Profile("development")
 public class FileStorageAdapter implements PdfStorageService {
 
     @Value("${app.orcamento.diretorio}")

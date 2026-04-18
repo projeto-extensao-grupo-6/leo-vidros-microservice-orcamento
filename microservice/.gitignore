@@ -31,7 +31,7 @@ build/
 
 ### VS Code ###
 .vscode/
-.env
+env.properties
 
 # Arquivos gerados pela aplicação
 storage/
@@ -43,4 +43,4 @@ temp/
 
 # Sistema Operacional
 .DS_Store
-Thumbs.db
+Thumbs.db   
