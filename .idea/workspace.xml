@@ -5,13 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="5a609157-8a4e-4a37-af1e-e920191e1a82" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/microservice/src/main/java/com/project/extension/infrastructure/adapters/S3StorageAdapter.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/microservice/src/main/java/com/project/extension/infrastructure/config/AwsConfig.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/microservice/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/microservice/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/microservice/compose.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/microservice/compose.yaml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/microservice/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/microservice/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/microservice/src/main/java/com/project/extension/infrastructure/adapters/FileStorageAdapter.java" beforeDir="false" afterPath="$PROJECT_DIR$/microservice/src/main/java/com/project/extension/infrastructure/adapters/FileStorageAdapter.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/microservice/src/main/resources/application.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/microservice/src/main/resources/application.yaml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
