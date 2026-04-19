@@ -12,6 +12,8 @@ server:
 spring:
   application:
     name: extension-project-api
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:development}
 
   rabbitmq:
     host: ${RABBITMQ_HOST:localhost}

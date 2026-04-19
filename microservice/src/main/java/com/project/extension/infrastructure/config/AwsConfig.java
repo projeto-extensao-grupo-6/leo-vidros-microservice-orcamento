@@ -4,13 +4,14 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
-import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
-import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import org.springframework.context.annotation.PropertySource;
+import software.amazon.awssdk.auth.credentials.*;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 
 @Configuration
 @Profile("production")
+@PropertySource("file:env.properties")
 public class AwsConfig {
 
     @Value("${AWS_ACCESS_KEY}")
@@ -29,8 +30,24 @@ public class AwsConfig {
     public S3Client s3Client() {
         return S3Client.builder()
                 .region(Region.of(region))
-                .credentialsProvider(StaticCredentialsProvider.create(
-                        software.amazon.awssdk.auth.credentials.AwsSessionCredentials.create(
-                                accessKey, secretKey, sessionToken))).build();
+                .credentialsProvider(resolveCredentialsProvider())
+                .build();
+    }
+
+    private AwsCredentialsProvider resolveCredentialsProvider() {
+        if (!hasExplicitCredentials()) {
+            return DefaultCredentialsProvider.create();
+        }
+        if (sessionToken != null && !sessionToken.isBlank()) {
+            return StaticCredentialsProvider.create(
+                    AwsSessionCredentials.create(accessKey, secretKey, sessionToken));
+        }
+        return StaticCredentialsProvider.create(
+                AwsBasicCredentials.create(accessKey, secretKey));
+    }
+
+    private boolean hasExplicitCredentials() {
+        return accessKey != null && !accessKey.isBlank()
+                && secretKey != null && !secretKey.isBlank();
     }
 }
