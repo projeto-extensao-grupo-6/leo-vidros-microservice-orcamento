@@ -15,7 +15,7 @@ public class S3StorageAdapter implements PdfStorageService {
 
     private final S3Client s3Client;
 
-    @Value("${AWS_S3_BUCKET:leo-vidros-orcamento-pdfs-us-east-1-prod}")
+    @Value("${AWS_S3_BUCKET}")
     private String bucketName;
 
     public S3StorageAdapter(S3Client s3Client) {
@@ -23,16 +23,18 @@ public class S3StorageAdapter implements PdfStorageService {
     }
 
     @Override
-    public void salvar(byte[] conteudo, String nomeArquivo) {
+    public String salvar(byte[] conteudo, String nomeArquivo) {
         try {
+            String s3Key = "orcamentos/" + nomeArquivo;
             PutObjectRequest putObjectRequest = PutObjectRequest.builder()
                     .bucket(bucketName)
-                    .key("orcamentos/" + nomeArquivo)
+                    .key(s3Key)
                     .contentType("application/pdf")
                     .build();
 
             s3Client.putObject(putObjectRequest, RequestBody.fromBytes(conteudo));
-            System.out.println("✅ Arquivo enviado com sucesso para o S3: " + bucketName);
+            System.out.println("✅ Arquivo enviado com sucesso para o S3: " + bucketName + "/" + s3Key);
+            return s3Key;
         } catch (Exception e) {
             throw new GeracaoPdfException("Erro ao enviar arquivo para o S3", e);
         }

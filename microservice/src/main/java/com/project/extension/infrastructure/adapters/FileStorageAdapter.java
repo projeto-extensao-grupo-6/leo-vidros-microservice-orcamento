@@ -18,7 +18,7 @@ public class FileStorageAdapter implements PdfStorageService {
     private String diretorioDestino;
 
     @Override
-    public void salvar(byte[] conteudo, String nomeArquivo) {
+    public String salvar(byte[] conteudo, String nomeArquivo) {
         try {
             Path pathDiretorio = Paths.get(diretorioDestino);
             if (!Files.exists(pathDiretorio)) {
@@ -29,6 +29,7 @@ public class FileStorageAdapter implements PdfStorageService {
             Files.write(caminhoCompleto, conteudo);
 
             System.out.println("✅ Arquivo salvo fisicamente em: " + caminhoCompleto.toAbsolutePath());
+            return nomeArquivo;
         } catch (Exception e) {
             throw new GeracaoPdfException("Erro crítico ao gravar o arquivo " + nomeArquivo + " no armazenamento.", e);
         }
