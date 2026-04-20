@@ -10,7 +10,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class BeanConfig {
     @Bean
-    public GerarPdfUseCase gerarPdfUseCase(@Qualifier("excelTemplateAdapter")PdfGenerator pdfGenerator, PdfStorageService storageService) {
+    public GerarPdfUseCase gerarPdfUseCase(@Qualifier("docxTemplateAdapter") PdfGenerator pdfGenerator, PdfStorageService storageService) {
         return new GerarPdfUseCase(pdfGenerator, storageService);
     }
 }
