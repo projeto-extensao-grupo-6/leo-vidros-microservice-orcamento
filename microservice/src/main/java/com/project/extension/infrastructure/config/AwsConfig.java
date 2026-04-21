@@ -11,19 +11,18 @@ import software.amazon.awssdk.services.s3.S3Client;
 
 @Configuration
 @Profile("production")
-@PropertySource("file:env.properties")
 public class AwsConfig {
 
-    @Value("${AWS_ACCESS_KEY}")
+    @Value("${aws.access-key-id:}")
     private String accessKey;
 
-    @Value("${AWS_SECRET_KEY}")
+    @Value("${aws.secret-access-key:}")
     private String secretKey;
 
-    @Value("${AWS_SESSION_TOKEN}")
+    @Value("${aws.session-token:}")
     private String sessionToken;
 
-    @Value("${AWS_REGION}")
+    @Value("${aws.region:us-east-1}")
     private String region;
 
     @Bean

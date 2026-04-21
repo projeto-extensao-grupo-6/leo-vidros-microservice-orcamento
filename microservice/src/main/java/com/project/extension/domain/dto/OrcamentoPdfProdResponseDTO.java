@@ -1,7 +1,7 @@
 package com.project.extension.domain.dto;
 
-public record OrcamentoPdfResponseDTO(
+public record OrcamentoPdfProdResponseDTO(
         Long orcamentoId,
         String numeroOrcamento,
-        byte[] pdfBytes
+        String nomeArquivo
 ) {}

@@ -2,6 +2,7 @@ package com.project.extension.infrastructure.adapters;
 
 import com.project.extension.application.ports.PdfStorageService;
 import com.project.extension.domain.exception.GeracaoPdfException;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
@@ -15,11 +16,18 @@ public class S3StorageAdapter implements PdfStorageService {
 
     private final S3Client s3Client;
 
-    @Value("${AWS_S3_BUCKET:leo-vidros-orcamento-pdfs-us-east-1-prod}")
+    @Value("${aws.s3.bucket:}")
     private String bucketName;
 
     public S3StorageAdapter(S3Client s3Client) {
         this.s3Client = s3Client;
+    }
+
+    @PostConstruct
+    public void validar() {
+        if (bucketName == null || bucketName.isBlank()) {
+            throw new IllegalStateException("Variável de ambiente AWS_S3_BUCKET não configurada para o perfil production");
+        }
     }
 
     @Override
@@ -27,7 +35,7 @@ public class S3StorageAdapter implements PdfStorageService {
         try {
             PutObjectRequest putObjectRequest = PutObjectRequest.builder()
                     .bucket(bucketName)
-                    .key("orcamentos/" + nomeArquivo)
+                    .key(nomeArquivo)
                     .contentType("application/pdf")
                     .build();
 
