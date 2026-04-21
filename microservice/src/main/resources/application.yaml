@@ -3,7 +3,6 @@ server:
     context-path: /api
   port: ${SERVER_PORT:3000}
   error:
-    include-message: never
     include-binding-errors: never
     include-stacktrace: never
     include-exception: false
@@ -18,23 +17,24 @@ spring:
   rabbitmq:
     host: ${RABBITMQ_HOST:localhost}
     port: ${RABBITMQ_PORT:5672}
-    username: ${RABBITMQ_USER:guest}
-    password: ${RABBITMQ_PASS:guest}
+    username: ${RABBITMQ_USER:leo_vidros}
+    password: ${RABBITMQ_PASS:leo_vidros_pass}
     listener:
       simple:
         retry:
           enabled: true
           initial-interval: 1000ms
-          max-attempts: 3
+          max-retries: 3
         default-requeue-rejected: false
+  web:
+    error:
+      include-message: never
 
 jwt:
   secret: ${JWT_SECRET:minha_chave_secreta_padrao_para_dev_123}
 
 app:
   environment: ${SPRING_PROFILES_ACTIVE:development}
-  convertapi:
-    token: ${CONVERT_API_TOKEN}
   orcamento:
-    diretorio: ${PDF_STORAGE_PATH:/storage/orcamentos}
-    template-path: "classpath:templates/orçamento.xlsx"
+    diretorio: ${PDF_STORAGE_PATH:/tmp/orcamentos}
+    template-path: "classpath:templates/orcamento.docx"
