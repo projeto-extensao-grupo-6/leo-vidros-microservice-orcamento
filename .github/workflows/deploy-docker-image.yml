@@ -19,6 +19,7 @@ jobs:
           java-version: '21'
 
       - name: Build JAR
+        working-directory: ./microservice
         run: ./mvnw clean package -DskipTests
       
       - name: Login to Docker Hub
@@ -31,6 +32,7 @@ jobs:
         run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
 
       - name: Build Docker image
+        working-directory: ./microservice
         run: |
           docker build \
             -f Dockerfile \
