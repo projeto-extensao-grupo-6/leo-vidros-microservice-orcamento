@@ -32,17 +32,13 @@ jobs:
 
       - name: Build Docker image
         run: |
-          rm -rf .docker-build-context
-          mkdir -p .docker-build-context/target
-          cp Dockerfile .docker-build-context/Dockerfile
-          cp -r target/. .docker-build-context/target/
-
           docker build \
-            -t ${{ secrets.DOCKERHUB_USERNAME }}/leo-vidros-microservice-budget:latest \
-            -t ${{ secrets.DOCKERHUB_USERNAME }}/leo-vidros-microservice-budget:${{ env.VERSION }} \
-            .docker-build-context
+            -f Dockerfile \
+            -t ${{ secrets.DOCKERHUB_USERNAME }}/leo-vidros-backend:latest \
+            -t ${{ secrets.DOCKERHUB_USERNAME }}/leo-vidros-backend:$VERSION \
+            .
       
       - name: Push Docker image
         run: |
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/leo-vidros-microservice-budget:latest
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/leo-vidros-microservice-budget:${{ env.VERSION }}
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/leo-vidros-backend:latest
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/leo-vidros-backend:$VERSION
