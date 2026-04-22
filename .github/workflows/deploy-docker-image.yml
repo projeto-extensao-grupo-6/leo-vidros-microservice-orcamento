@@ -35,6 +35,8 @@ jobs:
         working-directory: ./microservice
         run: |
           docker build \
+            --no-cache \
+            --pull \
             -f Dockerfile \
             -t ${{ secrets.DOCKERHUB_USERNAME }}/leo-vidros-microservice-budget:latest \
             -t ${{ secrets.DOCKERHUB_USERNAME }}/leo-vidros-microservice-budget:$VERSION \

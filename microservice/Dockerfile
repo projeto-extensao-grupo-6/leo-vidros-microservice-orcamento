@@ -6,7 +6,7 @@ COPY pom.xml ./
 
 COPY . .
 
-RUN mvn -B -e clean install -DskipTests=true
+RUN mvn -B -e clean package -DskipTests=true
 
 RUN cp ./target/*.jar ./application.jar
 
