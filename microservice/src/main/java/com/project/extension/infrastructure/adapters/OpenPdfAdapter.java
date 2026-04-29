@@ -3,6 +3,7 @@ package com.project.extension.infrastructure.adapters;
 import com.project.extension.application.ports.PdfGenerator;
 import com.project.extension.domain.dto.OrcamentoDTO;
 import com.project.extension.domain.dto.OrcamentoItemDTO;
+import com.project.extension.domain.dto.ProdutoInstalacaoDTO;
 import com.lowagie.text.*;
 import com.lowagie.text.pdf.PdfPCell;
 import com.lowagie.text.pdf.PdfPTable;
@@ -64,6 +65,37 @@ public class OpenPdfAdapter implements PdfGenerator {
 
             Font fontTotal = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14);
             document.add(new Paragraph("TOTAL: R$ " + String.format("%.2f", dados.valorTotal()), fontTotal));
+
+            if (dados.produtosInstalacao() != null && !dados.produtosInstalacao().isEmpty()) {
+                document.add(new Paragraph(" "));
+                Font fontSecao = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 11);
+                document.add(new Paragraph("MATERIAIS PREVISTOS PARA INSTALAÇÃO", fontSecao));
+
+                PdfPTable prodTable = new PdfPTable(2);
+                prodTable.setWidthPercentage(100);
+                prodTable.setSpacingBefore(6f);
+                prodTable.setSpacingAfter(10f);
+                prodTable.setWidths(new float[]{5f, 1.5f});
+
+                PdfPCell hProd = new PdfPCell();
+                hProd.setBackgroundColor(Color.LIGHT_GRAY);
+                hProd.setPadding(5);
+                Font fontH = FontFactory.getFont(FontFactory.HELVETICA_BOLD);
+                hProd.setPhrase(new Phrase("Produto", fontH));
+                prodTable.addCell(hProd);
+                PdfPCell hQtd = new PdfPCell();
+                hQtd.setBackgroundColor(Color.LIGHT_GRAY);
+                hQtd.setPadding(5);
+                hQtd.setPhrase(new Phrase("Qtd", fontH));
+                prodTable.addCell(hQtd);
+
+                for (ProdutoInstalacaoDTO prod : dados.produtosInstalacao()) {
+                    prodTable.addCell(prod.nome() != null ? prod.nome() : "");
+                    prodTable.addCell(prod.quantidade() != null
+                            ? String.format("%.2f", prod.quantidade()) : "0");
+                }
+                document.add(prodTable);
+            }
 
             document.add(new Paragraph(" "));
             document.add(new Paragraph("--- CONDIÇÕES COMERCIAIS ---"));

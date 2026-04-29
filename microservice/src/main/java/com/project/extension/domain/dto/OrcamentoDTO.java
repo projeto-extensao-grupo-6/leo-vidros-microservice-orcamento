@@ -16,5 +16,6 @@ public record OrcamentoDTO(
         String prazoInstalacao,
         String garantia,
         String formaPagamento,
-        String observacoes
+        String observacoes,
+        List<ProdutoInstalacaoDTO> produtosInstalacao
 ) {}
