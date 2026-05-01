@@ -1,8 +1,10 @@
 name: Build and Push Docker Image
 
 on:
+  workflow_dispatch:
   push:
-    tags: [ "*" ]
+    tags:
+      - '*.*.*'
 
 jobs:
   build-and-push:
