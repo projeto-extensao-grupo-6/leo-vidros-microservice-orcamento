@@ -40,11 +40,11 @@ jobs:
             --no-cache \
             --pull \
             -f Dockerfile \
-            -t ${{ secrets.DOCKERHUB_USERNAME }}/leo-vidros-microservice-budget:latest \
-            -t ${{ secrets.DOCKERHUB_USERNAME }}/leo-vidros-microservice-budget:$VERSION \
+            -t ${{ secrets.DOCKERHUB_USERNAME }}/leo-vidros-budget-microservice:latest \
+            -t ${{ secrets.DOCKERHUB_USERNAME }}/leo-vidros-budget-microservice:$VERSION \
             .
       
       - name: Push Docker image
         run: |
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/leo-vidros-microservice-budget:latest
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/leo-vidros-microservice-budget:$VERSION
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/leo-vidros-budget-microservice:latest
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/leo-vidros-budget-microservice:$VERSION
