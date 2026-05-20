@@ -21,94 +21,100 @@ import java.util.Map;
 @Component
 public class DocxTemplateAdapter implements PdfGenerator {
 
-    private final ResourceLoader resourceLoader;
+    private final ResourceLoader carregadorRecursos;
 
     @Value("${app.orcamento.template-path}")
-    private String templatePath;
+    private String caminhoTemplate;
 
-    public DocxTemplateAdapter(ResourceLoader resourceLoader) {
-        this.resourceLoader = resourceLoader;
+    public DocxTemplateAdapter(ResourceLoader carregadorRecursos) {
+        this.carregadorRecursos = carregadorRecursos;
     }
 
     @Override
     public byte[] generateFromOrcamento(OrcamentoDTO orcamento) {
-        try (InputStream is = resourceLoader.getResource(templatePath).getInputStream()) {
-            XWPFDocument doc = new XWPFDocument(is);
+        try (InputStream is = carregadorRecursos.getResource(caminhoTemplate).getInputStream()) {
+            XWPFDocument documento = new XWPFDocument(is);
 
-            Map<String, String> vars = buildVars(orcamento);
+            Map<String, String> variaveis = construirVariaveis(orcamento);
 
-            for (XWPFParagraph p : doc.getParagraphs()) {
-                replaceInParagraph(p, vars);
+            for (XWPFParagraph paragrafo : documento.getParagraphs()) {
+                substituirNoParagrafo(paragrafo, variaveis);
             }
 
-            for (XWPFTable table : doc.getTables()) {
-                processTable(table, orcamento, vars);
+            for (XWPFTable tabela : documento.getTables()) {
+                processarTabela(tabela, orcamento, variaveis);
             }
 
-            preserveTableBorders(doc);
-            return toPdf(doc);
+            preservarBordasTabela(documento);
+            return converterParaPdf(documento);
 
         } catch (Exception e) {
             throw new RuntimeException("Falha na geração do PDF via DOCX: " + e.getMessage(), e);
         }
     }
 
-    private void processTable(XWPFTable table, OrcamentoDTO orcamento, Map<String, String> vars) {
-        int templateRowIndex = -1;
-        for (int i = 0; i < table.getRows().size(); i++) {
-            if (getRowText(table.getRow(i)).contains("${itens.")) {
-                templateRowIndex = i;
+    private void processarTabela(XWPFTable tabela, OrcamentoDTO orcamento, Map<String, String> variaveis) {
+        int indiceLinhaTemplate = -1;
+        for (int i = 0; i < tabela.getRows().size(); i++) {
+            if (obterTextoLinha(tabela.getRow(i)).contains("${itens.")) {
+                indiceLinhaTemplate = i;
                 break;
             }
         }
 
-        if (templateRowIndex < 0) {
-            for (XWPFTableRow row : table.getRows()) {
-                replaceInRow(row, vars);
+        if (indiceLinhaTemplate < 0) {
+            for (XWPFTableRow linha : tabela.getRows()) {
+                substituirNaLinha(linha, variaveis);
+                corrigirLayoutFormaPagamento(linha, variaveis);
             }
             return;
         }
 
-        for (int i = 0; i < table.getRows().size(); i++) {
-            if (i != templateRowIndex) replaceInRow(table.getRow(i), vars);
+        for (int i = 0; i < tabela.getRows().size(); i++) {
+            if (i != indiceLinhaTemplate) {
+                substituirNaLinha(tabela.getRow(i), variaveis);
+                corrigirLayoutFormaPagamento(tabela.getRow(i), variaveis);
+            }
         }
 
-        XWPFTableRow templateRow = table.getRow(templateRowIndex);
+        XWPFTableRow linhaTemplate = tabela.getRow(indiceLinhaTemplate);
         List<OrcamentoItemDTO> itens = orcamento.itens();
 
         for (int i = itens.size() - 1; i >= 0; i--) {
-            CTRow cloned = (CTRow) templateRow.getCtRow().copy();
-            table.addRow(new XWPFTableRow(cloned, table), templateRowIndex);
-            replaceInRow(table.getRow(templateRowIndex), buildItemVars(itens.get(i)));
+            CTRow linhaClonada = (CTRow) linhaTemplate.getCtRow().copy();
+            tabela.addRow(new XWPFTableRow(linhaClonada, tabela), indiceLinhaTemplate);
+            substituirNaLinha(tabela.getRow(indiceLinhaTemplate), construirVariaveisItem(itens.get(i)));
         }
 
-        table.removeRow(templateRowIndex + itens.size());
+        tabela.removeRow(indiceLinhaTemplate + itens.size());
     }
 
-    private void replaceInRow(XWPFTableRow row, Map<String, String> vars) {
-        for (XWPFTableCell cell : row.getTableCells()) {
-            for (XWPFParagraph p : cell.getParagraphs()) {
-                replaceInParagraph(p, vars);
+    private void substituirNaLinha(XWPFTableRow linha, Map<String, String> variaveis) {
+        for (XWPFTableCell celula : linha.getTableCells()) {
+            for (XWPFParagraph paragrafo : celula.getParagraphs()) {
+                substituirNoParagrafo(paragrafo, variaveis);
             }
         }
     }
 
-    private void replaceInParagraph(XWPFParagraph para, Map<String, String> vars) {
-        List<XWPFRun> runs = para.getRuns();
-        if (runs == null || runs.isEmpty()) return;
+    private void substituirNoParagrafo(XWPFParagraph paragrafo, Map<String, String> variaveis) {
+        List<XWPFRun> runs = paragrafo.getRuns();
+        if (runs == null || runs.isEmpty())
+            return;
 
         for (XWPFRun run : runs) {
-            String text = run.getText(0);
-            if (text == null) continue;
-            String replaced = text;
-            boolean changed = false;
-            for (Map.Entry<String, String> e : vars.entrySet()) {
-                if (replaced.contains(e.getKey())) {
-                    replaced = replaced.replace(e.getKey(), e.getValue());
-                    changed = true;
+            String texto = run.getText(0);
+            if (texto == null) continue;
+            String textoSubstituido = texto;
+            boolean alterado = false;
+            for (Map.Entry<String, String> entrada : variaveis.entrySet()) {
+                if (textoSubstituido.contains(entrada.getKey())) {
+                    textoSubstituido = textoSubstituido.replace(entrada.getKey(), entrada.getValue() != null ? entrada.getValue() : "");
+                    alterado = true;
                 }
             }
-            if (changed) run.setText(replaced, 0);
+            if (alterado)
+                inserirTextoComQuebras(run, textoSubstituido);
         }
 
         StringBuilder sb = new StringBuilder();
@@ -116,29 +122,89 @@ public class DocxTemplateAdapter implements PdfGenerator {
             String t = run.getText(0);
             if (t != null) sb.append(t);
         }
-        String full = sb.toString();
-        boolean needsMerge = vars.keySet().stream().anyMatch(full::contains);
-        if (!needsMerge) return;
+        String textoCompleto = sb.toString();
+        boolean precisaMesclar = variaveis.keySet().stream().anyMatch(textoCompleto::contains);
+        if (!needsMerge(textoCompleto, variaveis)) return;
 
-        String merged = full;
-        for (Map.Entry<String, String> e : vars.entrySet()) {
-            merged = merged.replace(e.getKey(), e.getValue());
+        String textoMesclado = textoCompleto;
+        for (Map.Entry<String, String> entrada : variaveis.entrySet()) {
+            textoMesclado = textoMesclado.replace(entrada.getKey(), entrada.getValue() != null ? entrada.getValue() : "");
         }
 
-        XWPFRun first = runs.get(0);
-        while (first.getCTR().sizeOfTArray() > 0) first.getCTR().removeT(0);
-        first.getCTR().addNewT().setStringValue(merged);
+        XWPFRun primeiraRun = runs.get(0);
+        inserirTextoComQuebras(primeiraRun, textoMesclado);
+
         for (int i = 1; i < runs.size(); i++) {
             XWPFRun run = runs.get(i);
-            while (run.getCTR().sizeOfTArray() > 0) run.getCTR().removeT(0);
+            while (run.getCTR().sizeOfTArray() > 0) {
+                run.getCTR().removeT(0);
+            }
+            if (run.getCTR().sizeOfBrArray() > 0) {
+                for (int b = run.getCTR().sizeOfBrArray() - 1; b >= 0; b--) {
+                    run.getCTR().removeBr(b);
+                }
+            }
         }
     }
 
-    private String getRowText(XWPFTableRow row) {
+    private boolean needsMerge(String textoCompleto, Map<String, String> variaveis) {
+        return variaveis.keySet().stream().anyMatch(textoCompleto::contains);
+    }
+
+    private void inserirTextoComQuebras(XWPFRun run, String textoCompleto) {
+        while (run.getCTR().sizeOfTArray() > 0) {
+            run.getCTR().removeT(0);
+        }
+
+        if (textoCompleto == null) return;
+
+        String[] linhas = textoCompleto.split("\n", -1);
+
+        for (int i = 0; i < linhas.length; i++) {
+            if (i > 0) {
+                run.addBreak();
+            }
+            run.setText(linhas[i]);
+        }
+    }
+
+    /**
+     * Aplica espaçamentos calculados para descolar o texto da borda inferior e dar recuo à esquerda.
+     */
+    private void corrigirLayoutFormaPagamento(XWPFTableRow linha, Map<String, String> variaveis) {
+        String valorFormaPagamento = variaveis.get("${forma_pagamento}");
+        if (valorFormaPagamento == null || valorFormaPagamento.isEmpty()) return;
+
+        for (XWPFTableCell celula : linha.getTableCells()) {
+            if (celula.getText().contains(valorFormaPagamento)) {
+
+                // Força alinhamento central vertical na célula
+                celula.setVerticalAlignment(XWPFTableCell.XWPFVertAlign.CENTER);
+
+                // Reseta a restrição de altura rígida da linha se houver
+                if (linha.getCtRow().isSetTrPr() && linha.getCtRow().getTrPr().sizeOfTrHeightArray() > 0) {
+                    linha.getCtRow().getTrPr().setTrHeightArray(new CTHeight[]{});
+                }
+
+                for (XWPFParagraph paragrafo : celula.getParagraphs()) {
+                    // Força um recuo de 120 dxa (aproximadamente 3mm a 4mm à esquerda para afastar da margem)
+                    paragrafo.setIndentationLeft(120);
+
+                    // Define um espaçamento sutil antes do texto (60 dxa) para desencavalar do teto
+                    paragrafo.setSpacingBefore(60);
+                    paragrafo.setSpacingAfter(60);
+                    paragrafo.setSpacingLineRule(LineSpacingRule.AUTO);
+                    paragrafo.setAlignment(ParagraphAlignment.LEFT);
+                }
+            }
+        }
+    }
+
+    private String obterTextoLinha(XWPFTableRow linha) {
         StringBuilder sb = new StringBuilder();
-        for (XWPFTableCell cell : row.getTableCells()) {
-            for (XWPFParagraph p : cell.getParagraphs()) {
-                for (XWPFRun run : p.getRuns()) {
+        for (XWPFTableCell celula : linha.getTableCells()) {
+            for (XWPFParagraph paragrafo : celula.getParagraphs()) {
+                for (XWPFRun run : paragrafo.getRuns()) {
                     for (int i = 0; i < run.getCTR().sizeOfTArray(); i++) {
                         String t = run.getText(i);
                         if (t != null) sb.append(t);
@@ -149,91 +215,91 @@ public class DocxTemplateAdapter implements PdfGenerator {
         return sb.toString();
     }
 
-    private void preserveTableBorders(XWPFDocument doc) {
-        for (XWPFTable table : doc.getTables()) {
-            if (!isTableBorderless(table)) continue;
-            for (XWPFTableRow row : table.getRows()) {
-                for (XWPFTableCell cell : row.getTableCells()) {
-                    enforceCellNilBorders(cell);
+    private void preservarBordasTabela(XWPFDocument doc) {
+        for (XWPFTable tabela : doc.getTables()) {
+            if (!isTabelaSemBorda(tabela)) continue;
+            for (XWPFTableRow linha : tabela.getRows()) {
+                for (XWPFTableCell celula : linha.getTableCells()) {
+                    forcarBordasNulasCelula(celula);
                 }
             }
         }
     }
 
-    private boolean isTableBorderless(XWPFTable table) {
-        CTTblPr tblPr = table.getCTTbl().getTblPr();
+    private boolean isTabelaSemBorda(XWPFTable tabela) {
+        CTTblPr tblPr = tabela.getCTTbl().getTblPr();
         if (tblPr == null || !tblPr.isSetTblBorders()) return false;
         CTTblBorders b = tblPr.getTblBorders();
-        return isNil(b.getTop()) && isNil(b.getBottom())
-            && isNil(b.getLeft()) && isNil(b.getRight())
-            && isNil(b.getInsideH()) && isNil(b.getInsideV());
+        return isBordaNula(b.getTop()) && isBordaNula(b.getBottom())
+                && isBordaNula(b.getLeft()) && isBordaNula(b.getRight())
+                && isBordaNula(b.getInsideH()) && isBordaNula(b.getInsideV());
     }
 
-    private boolean isNil(CTBorder border) {
-        if (border == null) return true;
-        STBorder.Enum val = border.getVal();
+    private boolean isBordaNula(CTBorder borda) {
+        if (borda == null) return true;
+        STBorder.Enum val = borda.getVal();
         if (val == null) return true;
         String v = val.toString();
         return "nil".equals(v) || "none".equals(v);
     }
 
-    private void enforceCellNilBorders(XWPFTableCell cell) {
-        CTTcPr tcPr = cell.getCTTc().isSetTcPr()
-                ? cell.getCTTc().getTcPr()
-                : cell.getCTTc().addNewTcPr();
+    private void forcarBordasNulasCelula(XWPFTableCell celula) {
+        CTTcPr tcPr = celula.getCTTc().isSetTcPr()
+                ? celula.getCTTc().getTcPr()
+                : celula.getCTTc().addNewTcPr();
         CTTcBorders tcb = tcPr.isSetTcBorders()
                 ? tcPr.getTcBorders()
                 : tcPr.addNewTcBorders();
-        nilBorder(tcb.isSetTop()     ? tcb.getTop()     : tcb.addNewTop());
-        nilBorder(tcb.isSetBottom()  ? tcb.getBottom()  : tcb.addNewBottom());
-        nilBorder(tcb.isSetLeft()    ? tcb.getLeft()    : tcb.addNewLeft());
-        nilBorder(tcb.isSetRight()   ? tcb.getRight()   : tcb.addNewRight());
-        nilBorder(tcb.isSetInsideH() ? tcb.getInsideH() : tcb.addNewInsideH());
-        nilBorder(tcb.isSetInsideV() ? tcb.getInsideV() : tcb.addNewInsideV());
+        configurarBordaNula(tcb.isSetTop()     ? tcb.getTop()     : tcb.addNewTop());
+        configurarBordaNula(tcb.isSetBottom()  ? tcb.getBottom()  : tcb.addNewBottom());
+        configurarBordaNula(tcb.isSetLeft()    ? tcb.getLeft()    : tcb.addNewLeft());
+        configurarBordaNula(tcb.isSetRight()   ? tcb.getRight()   : tcb.addNewRight());
+        configurarBordaNula(tcb.isSetInsideH() ? tcb.getInsideH() : tcb.addNewInsideH());
+        configurarBordaNula(tcb.isSetInsideV() ? tcb.getInsideV() : tcb.addNewInsideV());
     }
 
-    private void nilBorder(CTBorder b) {
+    private void configurarBordaNula(CTBorder b) {
         b.setVal(STBorder.NIL);
         b.setSz(BigInteger.ZERO);
         b.setSpace(BigInteger.ZERO);
     }
 
-    private byte[] toPdf(XWPFDocument doc) throws Exception {
+    private byte[] converterParaPdf(XWPFDocument doc) throws Exception {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         PdfConverter.getInstance().convert(doc, out, PdfOptions.create());
         doc.close();
         return out.toByteArray();
     }
 
-    private Map<String, String> buildVars(OrcamentoDTO o) {
-        Map<String, String> vars = new HashMap<>();
-        vars.put("${nome_cliente}", o.cliente().nome());
-        vars.put("${numero_orcamento}", o.numeroOrcamento());
-        vars.put("${data_orcamento}", o.dataOrcamento() != null ? o.dataOrcamento() : "");
-        vars.put("${valor_subtotal}", formatarValor(o.valorSubtotal()));
-        vars.put("${desconto_total}", formatarValor(o.valorDesconto()));
-        vars.put("${valor_total}", formatarValor(o.valorTotal()));
-        vars.put("${prazo_instalacao}", o.prazoInstalacao() != null ? o.prazoInstalacao() : "");
-        vars.put("${garantia}", o.garantia() != null ? o.garantia() : "");
-        vars.put("${forma_pagamento}", o.formaPagamento() != null ? o.formaPagamento() : "");
-        vars.put("${observacoes}", o.observacoes() != null ? o.observacoes() : "");
-        return vars;
+    private Map<String, String> construirVariaveis(OrcamentoDTO o) {
+        Map<String, String> variaveis = new HashMap<>();
+        variaveis.put("${nome_cliente}", o.cliente().nome());
+        variaveis.put("${numero_orcamento}", o.numeroOrcamento());
+        variaveis.put("${data_orcamento}", o.dataOrcamento() != null ? o.dataOrcamento() : "");
+        variaveis.put("${valor_subtotal}", formatarValor(o.valorSubtotal()));
+        variaveis.put("${desconto_total}", formatarValor(o.valorDesconto()));
+        variaveis.put("${valor_total}", formatarValor(o.valorTotal()));
+        variaveis.put("${prazo_instalacao}", o.prazoInstalacao() != null ? o.prazoInstalacao() : "");
+        variaveis.put("${garantia}", o.garantia() != null ? o.garantia() : "");
+        variaveis.put("${forma_pagamento}", o.formaPagamento() != null ? o.formaPagamento() : "");
+        variaveis.put("${observacoes}", o.observacoes() != null ? o.observacoes() : "");
+
+        return variaveis;
     }
 
-    private Map<String, String> buildItemVars(OrcamentoItemDTO item) {
-        Map<String, String> vars = new HashMap<>();
-        vars.put("${itens.codigo}", "");
-        vars.put("${itens.quantidade}", formatarQuantidade(item.quantidade()));
-        vars.put("${itens.produto}", item.descricao());
-        vars.put("${itens.preco_unitario}", formatarValor(item.precoUnitario()));
-        vars.put("${itens.valor_total_produto}", formatarValor(item.subtotal()));
-        vars.put("${itens.desconto_produto}", formatarValor(item.desconto()));
-        return vars;
+    private Map<String, String> construirVariaveisItem(OrcamentoItemDTO item) {
+        Map<String, String> variaveis = new HashMap<>();
+        variaveis.put("${itens.codigo}", "");
+        variaveis.put("${itens.quantidade}", formatarQuantidade(item.quantidade()));
+        variaveis.put("${itens.produto}", item.descricao());
+        variaveis.put("${itens.preco_unitario}", formatarValor(item.precoUnitario()));
+        variaveis.put("${itens.valor_total_produto}", formatarValor(item.subtotal()));
+        variaveis.put("${itens.desconto_produto}", formatarValor(item.desconto()));
+        return variaveis;
     }
 
     private String formatarValor(Double valor) {
-        if (valor == null) return "R$ 0,00";
-        return String.format("R$ %.2f", valor).replace(".", ",");
+        return valor == null ? "R$ 0,00" : String.format("R$ %.2f", valor).replace(".", ",");
     }
 
     private String formatarQuantidade(Double quantidade) {
