@@ -34,7 +34,7 @@ build/
 
 ### VS Code ###
 .vscode/
-env.properties
+env
 
 # Arquivos gerados pela aplicação
 storage/

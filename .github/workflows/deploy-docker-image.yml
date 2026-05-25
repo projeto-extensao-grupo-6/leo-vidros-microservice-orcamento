@@ -1,12 +1,46 @@
 name: Build and Push Docker Image
 
 on:
+  workflow_dispatch:
   push:
-    tags: [ "*" ]
+    tags:
+      - '*.*.*'
 
 jobs:
-  build-and-push:
+  setup:
     runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+  test:
+    runs-on: ubuntu-latest
+    needs: setup
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Run tests
+        working-directory: ./microservice
+        run: ./mvnw test
+
+  build-jar:
+    runs-on: ubuntu-latest
+    needs: test
 
     steps:
       - name: Checkout code
@@ -21,7 +55,27 @@ jobs:
       - name: Build JAR
         working-directory: ./microservice
         run: ./mvnw clean package -DskipTests
-      
+
+      - name: Upload JAR artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: jar-artifact
+          path: ./microservice/target/*.jar
+
+  docker-build-and-push:
+    runs-on: ubuntu-latest
+    needs: build-jar
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download JAR artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: jar-artifact
+          path: ./microservice/target
+
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
@@ -38,11 +92,11 @@ jobs:
             --no-cache \
             --pull \
             -f Dockerfile \
-            -t ${{ secrets.DOCKERHUB_USERNAME }}/leo-vidros-microservice-budget:latest \
-            -t ${{ secrets.DOCKERHUB_USERNAME }}/leo-vidros-microservice-budget:$VERSION \
+            -t ${{ secrets.DOCKERHUB_USERNAME }}/leo-vidros-budget-microservice:latest \
+            -t ${{ secrets.DOCKERHUB_USERNAME }}/leo-vidros-budget-microservice:$VERSION \
             .
       
       - name: Push Docker image
         run: |
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/leo-vidros-microservice-budget:latest
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/leo-vidros-microservice-budget:$VERSION
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/leo-vidros-budget-microservice:latest
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/leo-vidros-budget-microservice:$VERSION
