@@ -41,6 +41,9 @@ aws:
   s3:
     bucket: ${AWS_S3_BUCKET:}
 
+convertapi:
+  key: ${CONVERTAPI_KEY:}
+
 app:
   environment: ${APP_ENV:development}
   orcamento:

@@ -11,9 +11,14 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Component;
 
-import java.math.BigInteger;
+
+import jakarta.annotation.PostConstruct;
+
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,14 +31,23 @@ public class DocxTemplateAdapter implements PdfGenerator {
     @Value("${app.orcamento.template-path}")
     private String templatePath;
 
+    private byte[] templateBytes;
+
     public DocxTemplateAdapter(ResourceLoader resourceLoader) {
         this.resourceLoader = resourceLoader;
     }
 
+    @PostConstruct
+    public void init() throws IOException {
+        try (InputStream is = resourceLoader.getResource(templatePath).getInputStream()) {
+            this.templateBytes = is.readAllBytes();
+        }
+    }
+
     @Override
     public byte[] generateFromOrcamento(OrcamentoDTO orcamento) {
-        try (InputStream is = resourceLoader.getResource(templatePath).getInputStream()) {
-            XWPFDocument doc = new XWPFDocument(is);
+        try {
+            XWPFDocument doc = new XWPFDocument(new ByteArrayInputStream(templateBytes));
 
             Map<String, String> vars = buildVars(orcamento);
 
@@ -55,22 +69,23 @@ public class DocxTemplateAdapter implements PdfGenerator {
 
     private void processTable(XWPFTable table, OrcamentoDTO orcamento, Map<String, String> vars) {
         int templateRowIndex = -1;
-        for (int i = 0; i < table.getRows().size(); i++) {
-            if (getRowText(table.getRow(i)).contains("${itens.")) {
+        List<XWPFTableRow> rows = table.getRows();
+        for (int i = 0; i < rows.size(); i++) {
+            if (rowHasItemPlaceholder(rows.get(i))) {
                 templateRowIndex = i;
                 break;
             }
         }
 
         if (templateRowIndex < 0) {
-            for (XWPFTableRow row : table.getRows()) {
+            for (XWPFTableRow row : rows) {
                 replaceInRow(row, vars);
             }
             return;
         }
 
-        for (int i = 0; i < table.getRows().size(); i++) {
-            if (i != templateRowIndex) replaceInRow(table.getRow(i), vars);
+        for (int i = 0; i < rows.size(); i++) {
+            if (i != templateRowIndex) replaceInRow(rows.get(i), vars);
         }
 
         XWPFTableRow templateRow = table.getRow(templateRowIndex);
@@ -97,33 +112,21 @@ public class DocxTemplateAdapter implements PdfGenerator {
         List<XWPFRun> runs = para.getRuns();
         if (runs == null || runs.isEmpty()) return;
 
-        for (XWPFRun run : runs) {
-            String text = run.getText(0);
-            if (text == null) continue;
-            String replaced = text;
-            boolean changed = false;
-            for (Map.Entry<String, String> e : vars.entrySet()) {
-                if (replaced.contains(e.getKey())) {
-                    replaced = replaced.replace(e.getKey(), e.getValue());
-                    changed = true;
-                }
-            }
-            if (changed) run.setText(replaced, 0);
-        }
-
         StringBuilder sb = new StringBuilder();
         for (XWPFRun run : runs) {
             String t = run.getText(0);
             if (t != null) sb.append(t);
         }
         String full = sb.toString();
-        boolean needsMerge = vars.keySet().stream().anyMatch(full::contains);
-        if (!needsMerge) return;
+        if (!full.contains("${")) return;
 
         String merged = full;
         for (Map.Entry<String, String> e : vars.entrySet()) {
-            merged = merged.replace(e.getKey(), e.getValue());
+            if (merged.contains(e.getKey())) {
+                merged = merged.replace(e.getKey(), e.getValue());
+            }
         }
+        if (merged.equals(full)) return;
 
         XWPFRun first = runs.get(0);
         while (first.getCTR().sizeOfTArray() > 0) first.getCTR().removeT(0);
@@ -134,19 +137,16 @@ public class DocxTemplateAdapter implements PdfGenerator {
         }
     }
 
-    private String getRowText(XWPFTableRow row) {
-        StringBuilder sb = new StringBuilder();
+    private boolean rowHasItemPlaceholder(XWPFTableRow row) {
         for (XWPFTableCell cell : row.getTableCells()) {
             for (XWPFParagraph p : cell.getParagraphs()) {
                 for (XWPFRun run : p.getRuns()) {
-                    for (int i = 0; i < run.getCTR().sizeOfTArray(); i++) {
-                        String t = run.getText(i);
-                        if (t != null) sb.append(t);
-                    }
+                    String t = run.getText(0);
+                    if (t != null && t.contains("${itens.")) return true;
                 }
             }
         }
-        return sb.toString();
+        return false;
     }
 
     private void preserveTableBorders(XWPFDocument doc) {
