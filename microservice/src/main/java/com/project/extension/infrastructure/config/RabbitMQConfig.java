@@ -28,6 +28,16 @@ public class RabbitMQConfig {
     }
 
     @Bean
+    public Queue responseQueue() {
+        return new Queue(RESPONSE_QUEUE_NAME, true);
+    }
+
+    @Bean
+    public Binding responseBinding() {
+        return BindingBuilder.bind(responseQueue()).to(orcamentoResponseFanoutExchange());
+    }
+
+    @Bean
     public Queue orcamentoQueue() {
         return QueueBuilder.durable(QUEUE_NAME)
                 .withArgument("x-dead-letter-exchange", DLX_EXCHANGE_NAME)

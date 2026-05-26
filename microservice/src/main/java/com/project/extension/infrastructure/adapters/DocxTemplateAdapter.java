@@ -148,10 +148,14 @@ public class DocxTemplateAdapter implements PdfGenerator {
     private boolean rowHasItemPlaceholder(XWPFTableRow row) {
         for (XWPFTableCell cell : row.getTableCells()) {
             for (XWPFParagraph p : cell.getParagraphs()) {
+                StringBuilder sb = new StringBuilder();
                 for (XWPFRun run : p.getRuns()) {
-                    String t = run.getText(0);
-                    if (t != null && t.contains("${itens.")) return true;
+                    for (int i = 0; i < run.getCTR().sizeOfTArray(); i++) {
+                        String t = run.getText(i);
+                        if (t != null) sb.append(t);
+                    }
                 }
+                if (sb.toString().contains("${itens.")) return true;
             }
         }
         return false;
