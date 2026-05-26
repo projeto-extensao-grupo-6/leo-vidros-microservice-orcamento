@@ -100,10 +100,14 @@ public class ExcelTemplateAdapter implements PdfGenerator {
             throw new RuntimeException("Erro na ConvertAPI HTTP " + response.statusCode() + ": " + response.body());
         }
 
-        JsonNode fileData = objectMapper.readTree(response.body())
-                .path("Files").get(0).path("FileData");
+        JsonNode root = objectMapper.readTree(response.body());
+        JsonNode files = root.path("Files");
+        if (!files.isArray() || files.size() == 0) {
+            throw new RuntimeException("Resposta inválida da ConvertAPI: array Files ausente/vazio");
+        }
 
-        if (fileData == null || fileData.isMissingNode()) {
+        JsonNode fileData = files.get(0).path("FileData");
+        if (fileData.isMissingNode() || fileData.asText().isBlank()) {
             throw new RuntimeException("Resposta inválida da ConvertAPI: campo FileData ausente");
         }
 
