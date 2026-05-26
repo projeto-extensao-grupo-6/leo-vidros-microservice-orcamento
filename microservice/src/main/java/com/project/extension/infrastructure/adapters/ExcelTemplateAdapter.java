@@ -81,6 +81,10 @@ public class ExcelTemplateAdapter implements PdfGenerator {
     }
 
     private byte[] converterViaApiExterna(byte[] excelBytes) throws Exception {
+        if (convertApiKey == null || convertApiKey.isBlank()) {
+            throw new RuntimeException("CONVERTAPI_KEY não configurada");
+        }
+
         String base64Excel = Base64.getEncoder().encodeToString(excelBytes);
 
         Map<String, Object> fileValue = Map.of("Name", "orcamento.xlsx", "Data", base64Excel);
