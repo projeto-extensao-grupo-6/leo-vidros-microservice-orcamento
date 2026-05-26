@@ -8,6 +8,7 @@ import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.amqp.core.FanoutExchange;
 
 @Configuration
 public class RabbitMQConfig {
@@ -16,9 +17,15 @@ public class RabbitMQConfig {
     public static final String DLQ_NAME = "fila.orcamento.pdf.dlq";
     public static final String EXCHANGE_NAME = "exchange.leovidros.direct";
     public static final String DLX_EXCHANGE_NAME = "exchange.leovidros.dlx";
+    public static final String RESPONSE_FANOUT_EXCHANGE = "exchange.leovidros.orcamento.resposta.fanout";
     public static final String ROUTING_KEY = "orcamento.gerar";
     public static final String RESPONSE_ROUTING_KEY = "orcamento.concluido";
     public static final String DLQ_ROUTING_KEY = "orcamento.falha";
+
+    @Bean
+    public FanoutExchange orcamentoResponseFanoutExchange() {
+        return new FanoutExchange(RESPONSE_FANOUT_EXCHANGE, true, false);
+    }
 
     @Bean
     public Queue responseQueue() {
@@ -27,7 +34,7 @@ public class RabbitMQConfig {
 
     @Bean
     public Binding responseBinding() {
-        return BindingBuilder.bind(responseQueue()).to(exchange()).with(RESPONSE_ROUTING_KEY);
+        return BindingBuilder.bind(responseQueue()).to(orcamentoResponseFanoutExchange());
     }
 
     @Bean
@@ -83,6 +90,9 @@ public class RabbitMQConfig {
         factory.setConnectionFactory(connectionFactory);
         factory.setMessageConverter(jsonMessageConverter());
         factory.setDefaultRequeueRejected(false);
+        factory.setConcurrentConsumers(2);
+        factory.setMaxConcurrentConsumers(5);
+        factory.setPrefetchCount(1);
         return factory;
     }
 }

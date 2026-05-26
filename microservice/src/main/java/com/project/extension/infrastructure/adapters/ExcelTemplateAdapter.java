@@ -1,52 +1,77 @@
 package com.project.extension.infrastructure.adapters;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.project.extension.application.ports.PdfGenerator;
 import com.project.extension.domain.dto.OrcamentoDTO;
 import com.project.extension.domain.dto.OrcamentoItemDTO;
+import jakarta.annotation.PostConstruct;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Component;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.time.Duration;
+import java.util.Base64;
 import java.util.List;
+import java.util.Map;
 
 @Component
 public class ExcelTemplateAdapter implements PdfGenerator {
-    @Autowired
-    private ResourceLoader resourceLoader;
+
+    private final ResourceLoader resourceLoader;
+    private final ObjectMapper objectMapper;
 
     @Value("${app.orcamento.template-path}")
     private String templatePath;
 
+    @Value("${convertapi.key}")
+    private String convertApiKey;
+
+    private byte[] templateBytes;
+    private HttpClient httpClient;
+
+    public ExcelTemplateAdapter(ResourceLoader resourceLoader, ObjectMapper objectMapper) {
+        this.resourceLoader = resourceLoader;
+        this.objectMapper = objectMapper;
+    }
+
+    @PostConstruct
+    public void init() throws IOException {
+        try (InputStream is = resourceLoader.getResource(templatePath).getInputStream()) {
+            this.templateBytes = is.readAllBytes();
+        }
+        this.httpClient = HttpClient.newBuilder()
+                .connectTimeout(Duration.ofSeconds(20))
+                .build();
+    }
+
     @Override
     public byte[] generateFromOrcamento(OrcamentoDTO orcamento) {
-        Resource resource = resourceLoader.getResource(templatePath);
-
         try {
             byte[] excelBytes = preencherExcel(orcamento);
             return converterViaApiExterna(excelBytes);
         } catch (Exception e) {
-            throw new RuntimeException("Falha na geração via Excel/API: " + e.getMessage() + " Mensagem: " + e.getCause(), e);
+            throw new RuntimeException("Falha na geração via Excel/API: " + e.getMessage(), e);
         }
     }
 
     private byte[] preencherExcel(OrcamentoDTO dto) throws IOException {
-        Resource resource = resourceLoader.getResource(templatePath);
-        try (InputStream is = resource.getInputStream();
+        try (InputStream is = new ByteArrayInputStream(templateBytes);
              Workbook workbook = new XSSFWorkbook(is)) {
 
             Sheet sheet = workbook.getSheetAt(0);
             preencherCabecalho(sheet, dto);
             preencherItens(sheet, dto.itens());
-
             workbook.getCreationHelper().createFormulaEvaluator().evaluateAll();
 
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
@@ -56,46 +81,41 @@ public class ExcelTemplateAdapter implements PdfGenerator {
     }
 
     private byte[] converterViaApiExterna(byte[] excelBytes) throws Exception {
-        HttpClient client = HttpClient.newBuilder()
-                .connectTimeout(java.time.Duration.ofSeconds(20))
-                .build();
+        if (convertApiKey == null || convertApiKey.isBlank()) {
+            throw new IllegalStateException("CONVERTAPI_KEY não configurada — defina a propriedade convertapi.key");
+        }
 
-        String base64Excel = java.util.Base64.getEncoder().encodeToString(excelBytes);
+        String base64Excel = Base64.getEncoder().encodeToString(excelBytes);
 
-        String jsonBody = """
-            {
-                "Parameters": [
-                    {
-                        "Name": "File",
-                        "FileValue": {
-                            "Name": "orcamento.xlsx",
-                            "Data": "%s"
-                        }
-                    }
-                ]
-            }
-            """.formatted(base64Excel);
+        Map<String, Object> fileValue = Map.of("Name", "orcamento.xlsx", "Data", base64Excel);
+        Map<String, Object> param = Map.of("Name", "File", "FileValue", fileValue);
+        String jsonBody = objectMapper.writeValueAsString(Map.of("Parameters", List.of(param)));
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create("https://v2.convertapi.com/convert/xlsx/to/pdf"))
-                .header("Authorization", "Bearer YsF8uQpMH1k5dRSxVhaQ2IT0OJsHbidJ")
+                .header("Authorization", "Bearer " + convertApiKey)
                 .header("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
                 .build();
 
-        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
         if (response.statusCode() != 200) {
-            throw new RuntimeException("Erro na API: " + response.body());
+            throw new RuntimeException("Erro na ConvertAPI HTTP " + response.statusCode() + ": " + response.body());
         }
 
-        String body = response.body();
-        String busca = "\"FileData\":\"";
-        int inicio = body.indexOf(busca) + busca.length();
-        int fim = body.indexOf("\"", inicio);
-        String base64Pdf = body.substring(inicio, fim);
+        JsonNode root = objectMapper.readTree(response.body());
+        JsonNode files = root.path("Files");
+        if (!files.isArray() || files.size() == 0) {
+            throw new RuntimeException("Resposta inválida da ConvertAPI: array Files ausente/vazio");
+        }
 
-        return java.util.Base64.getDecoder().decode(base64Pdf);
+        JsonNode fileData = files.get(0).path("FileData");
+        if (fileData.isMissingNode() || fileData.asText().isBlank()) {
+            throw new RuntimeException("Resposta inválida da ConvertAPI: campo FileData ausente");
+        }
+
+        return Base64.getDecoder().decode(fileData.asText());
     }
 
     private void preencherCabecalho(Sheet sheet, OrcamentoDTO dto) {
@@ -107,7 +127,6 @@ public class ExcelTemplateAdapter implements PdfGenerator {
     private void preencherItens(Sheet sheet, List<OrcamentoItemDTO> itens) {
         int linhaInicial = 18;
         for (int i = 0; i < itens.size() && i < 14; i++) {
-            Row row = getRow(sheet, linhaInicial + i);
             OrcamentoItemDTO item = itens.get(i);
             getCell(sheet, linhaInicial + i, 1).setCellValue(item.quantidade());
             getCell(sheet, linhaInicial + i, 2).setCellValue(item.descricao());
