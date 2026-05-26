@@ -26,10 +26,10 @@ import java.util.Map;
 @Component
 public class DocxTemplateAdapter implements PdfGenerator {
 
-    private final ResourceLoader carregadorRecursos;
+    private final ResourceLoader resourceLoader;
 
     @Value("${app.orcamento.template-path}")
-    private String caminhoTemplate;
+    private String templatePath;
 
     private byte[] templateBytes;
 
@@ -47,7 +47,7 @@ public class DocxTemplateAdapter implements PdfGenerator {
     @Override
     public byte[] generateFromOrcamento(OrcamentoDTO orcamento) {
         try {
-            XWPFDocument doc = new XWPFDocument(new ByteArrayInputStream(templateBytes));
+            XWPFDocument documento = new XWPFDocument(new ByteArrayInputStream(templateBytes));
 
             Map<String, String> variaveis = construirVariaveis(orcamento);
 
@@ -56,7 +56,7 @@ public class DocxTemplateAdapter implements PdfGenerator {
             }
 
             for (XWPFTable tabela : documento.getTables()) {
-                processarTabela(tabela, orcamento, variaveis);
+                processTable(tabela, orcamento, variaveis);
             }
 
             preservarBordasTabela(documento);
@@ -79,25 +79,25 @@ public class DocxTemplateAdapter implements PdfGenerator {
 
         if (templateRowIndex < 0) {
             for (XWPFTableRow row : rows) {
-                replaceInRow(row, vars);
+                substituirNaLinha(row, vars);
             }
             return;
         }
 
         for (int i = 0; i < rows.size(); i++) {
-            if (i != templateRowIndex) replaceInRow(rows.get(i), vars);
+            if (i != templateRowIndex) substituirNaLinha(rows.get(i), vars);
         }
 
-        XWPFTableRow linhaTemplate = tabela.getRow(indiceLinhaTemplate);
+        XWPFTableRow linhaTemplate = table.getRow(templateRowIndex);
         List<OrcamentoItemDTO> itens = orcamento.itens();
 
         for (int i = itens.size() - 1; i >= 0; i--) {
             CTRow linhaClonada = (CTRow) linhaTemplate.getCtRow().copy();
-            tabela.addRow(new XWPFTableRow(linhaClonada, tabela), indiceLinhaTemplate);
-            substituirNaLinha(tabela.getRow(indiceLinhaTemplate), construirVariaveisItem(itens.get(i)));
+            table.addRow(new XWPFTableRow(linhaClonada, table), templateRowIndex);
+            substituirNaLinha(table.getRow(templateRowIndex), construirVariaveisItem(itens.get(i)));
         }
 
-        tabela.removeRow(indiceLinhaTemplate + itens.size());
+        table.removeRow(templateRowIndex + itens.size());
     }
 
     private void substituirNaLinha(XWPFTableRow linha, Map<String, String> variaveis) {
@@ -122,7 +122,7 @@ public class DocxTemplateAdapter implements PdfGenerator {
         if (!full.contains("${")) return;
 
         String merged = full;
-        for (Map.Entry<String, String> e : vars.entrySet()) {
+        for (Map.Entry<String, String> e : variaveis.entrySet()) {
             if (merged.contains(e.getKey())) {
                 merged = merged.replace(e.getKey(), e.getValue());
             }
@@ -130,7 +130,7 @@ public class DocxTemplateAdapter implements PdfGenerator {
         if (merged.equals(full)) return;
 
         XWPFRun primeiraRun = runs.get(0);
-        inserirTextoComQuebras(primeiraRun, textoMesclado);
+        primeiraRun.setText(merged, 0);
 
         for (int i = 1; i < runs.size(); i++) {
             XWPFRun run = runs.get(i);
