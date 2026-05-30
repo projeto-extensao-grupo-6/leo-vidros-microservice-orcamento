@@ -51,10 +51,10 @@ public class OpenPdfAdapter implements PdfGenerator {
 
             // Adicionando os itens do DTO
             for (OrcamentoItemDTO item : dados.itens()) {
-                table.addCell(item.descricao());
-                table.addCell(String.valueOf(item.quantidade()));
-                table.addCell("R$ " + String.format("%.2f", item.precoUnitario()));
-                table.addCell("R$ " + String.format("%.2f", item.subtotal()));
+                table.addCell(item.descricao() != null ? item.descricao() : "");
+                table.addCell(item.quantidade() != null ? String.valueOf(item.quantidade()) : "0");
+                table.addCell("R$ " + String.format("%.2f", item.precoUnitario() != null ? item.precoUnitario() : 0.0));
+                table.addCell("R$ " + String.format("%.2f", item.subtotal() != null ? item.subtotal() : 0.0));
             }
 
             document.add(table);
@@ -99,9 +99,12 @@ public class OpenPdfAdapter implements PdfGenerator {
 
             document.add(new Paragraph(" "));
             document.add(new Paragraph("--- CONDIÇÕES COMERCIAIS ---"));
-            document.add(new Paragraph("Prazo de Instalação: " + dados.prazoInstalacao()));
-            document.add(new Paragraph("Garantia: " + dados.garantia()));
-            document.add(new Paragraph("Forma de Pagamento: " + dados.formaPagamento()));
+            if (dados.prazoInstalacao() != null && !dados.prazoInstalacao().isBlank())
+                document.add(new Paragraph("Prazo de Instalação: " + dados.prazoInstalacao()));
+            if (dados.garantia() != null && !dados.garantia().isBlank())
+                document.add(new Paragraph("Garantia: " + dados.garantia()));
+            if (dados.formaPagamento() != null && !dados.formaPagamento().isBlank())
+                document.add(new Paragraph("Forma de Pagamento: " + dados.formaPagamento()));
 
             if (dados.observacoes() != null && !dados.observacoes().isEmpty()) {
                 document.add(new Paragraph("Observações: " + dados.observacoes()));
