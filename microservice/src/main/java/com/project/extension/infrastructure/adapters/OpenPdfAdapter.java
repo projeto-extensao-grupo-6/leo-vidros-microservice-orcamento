@@ -36,25 +36,22 @@ public class OpenPdfAdapter implements PdfGenerator {
             document.add(new Paragraph("Data: " + dados.dataOrcamento()));
             document.add(new Paragraph("Cliente: " + dados.cliente().nome()));
             document.add(new Paragraph("E-mail: " + dados.cliente().email()));
-            document.add(new Paragraph(" ")); // Espaço em branco
+            document.add(new Paragraph(" "));
 
             // --- TABELA DE ITENS ---
-            // Criamos uma tabela com 4 colunas: Descrição, Qtd, Preço Unit., Subtotal
             PdfPTable table = new PdfPTable(4);
             table.setWidthPercentage(100);
             table.setSpacingBefore(10f);
             table.setSpacingAfter(10f);
-            table.setWidths(new float[]{4f, 1f, 2f, 2f}); // Ajusta a largura relativa das colunas
+            table.setWidths(new float[]{4f, 1f, 2f, 2f});
 
-            // Estilização do Cabeçalho da Tabela
             addTableHeader(table);
 
-            // Adicionando os itens do DTO
             for (OrcamentoItemDTO item : dados.itens()) {
-                table.addCell(item.descricao() != null ? item.descricao() : "");
-                table.addCell(item.quantidade() != null ? String.valueOf(item.quantidade()) : "0");
-                table.addCell("R$ " + String.format("%.2f", item.precoUnitario() != null ? item.precoUnitario() : 0.0));
-                table.addCell("R$ " + String.format("%.2f", item.subtotal() != null ? item.subtotal() : 0.0));
+                table.addCell(item.descricao());
+                table.addCell(String.valueOf(item.quantidade()));
+                table.addCell("R$ " + String.format("%.2f", item.precoUnitario()));
+                table.addCell("R$ " + String.format("%.2f", item.subtotal()));
             }
 
             document.add(table);
@@ -99,12 +96,9 @@ public class OpenPdfAdapter implements PdfGenerator {
 
             document.add(new Paragraph(" "));
             document.add(new Paragraph("--- CONDIÇÕES COMERCIAIS ---"));
-            if (dados.prazoInstalacao() != null && !dados.prazoInstalacao().isBlank())
-                document.add(new Paragraph("Prazo de Instalação: " + dados.prazoInstalacao()));
-            if (dados.garantia() != null && !dados.garantia().isBlank())
-                document.add(new Paragraph("Garantia: " + dados.garantia()));
-            if (dados.formaPagamento() != null && !dados.formaPagamento().isBlank())
-                document.add(new Paragraph("Forma de Pagamento: " + dados.formaPagamento()));
+            document.add(new Paragraph("Prazo de Instalação: " + dados.prazoInstalacao()));
+            document.add(new Paragraph("Garantia: " + dados.garantia()));
+            document.add(new Paragraph("Forma de Pagamento: " + dados.formaPagamento()));
 
             if (dados.observacoes() != null && !dados.observacoes().isEmpty()) {
                 document.add(new Paragraph("Observações: " + dados.observacoes()));

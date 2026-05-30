@@ -19,6 +19,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -56,6 +58,7 @@ public class DocxTemplateAdapter implements PdfGenerator {
             }
 
             for (XWPFTable tabela : documento.getTables()) {
+                centralizarVerticalmentePorPlaceholder(tabela, "${nome_cliente}");
                 processTable(tabela, orcamento, variaveis);
             }
 
@@ -85,7 +88,10 @@ public class DocxTemplateAdapter implements PdfGenerator {
         }
 
         for (int i = 0; i < rows.size(); i++) {
-            if (i != templateRowIndex) substituirNaLinha(rows.get(i), vars);
+            if (i != templateRowIndex) {
+                substituirNaLinha(rows.get(i), vars);
+                if (i > 0) centralizarCelulas(rows.get(i));
+            }
         }
 
         XWPFTableRow linhaTemplate = table.getRow(templateRowIndex);
@@ -94,21 +100,63 @@ public class DocxTemplateAdapter implements PdfGenerator {
         for (int i = itens.size() - 1; i >= 0; i--) {
             CTRow linhaClonada = (CTRow) linhaTemplate.getCtRow().copy();
             table.addRow(new XWPFTableRow(linhaClonada, table), templateRowIndex);
-            substituirNaLinha(table.getRow(templateRowIndex), construirVariaveisItem(itens.get(i)));
+            substituirNaLinha(table.getRow(templateRowIndex), construirVariaveisItem(itens.get(i)), true);
+            centralizarCelulas(table.getRow(templateRowIndex));
         }
 
         table.removeRow(templateRowIndex + itens.size());
     }
 
+    private void centralizarVerticalmentePorPlaceholder(XWPFTable table, String placeholder) {
+        for (XWPFTableRow row : table.getRows()) {
+            for (XWPFTableCell cell : row.getTableCells()) {
+                String texto = cell.getParagraphs().stream()
+                        .flatMap(p -> p.getRuns().stream())
+                        .map(r -> r.getText(0) != null ? r.getText(0) : "")
+                        .collect(java.util.stream.Collectors.joining());
+                if (texto.contains(placeholder)) {
+                    CTTcPr tcPr = cell.getCTTc().isSetTcPr()
+                            ? cell.getCTTc().getTcPr()
+                            : cell.getCTTc().addNewTcPr();
+                    if (tcPr.isSetVAlign()) tcPr.unsetVAlign();
+                    tcPr.addNewVAlign().setVal(STVerticalJc.CENTER);
+                }
+            }
+        }
+    }
+
+    private void centralizarCelulas(XWPFTableRow linha) {
+        for (XWPFTableCell celula : linha.getTableCells()) {
+            CTTcPr tcPr = celula.getCTTc().isSetTcPr()
+                    ? celula.getCTTc().getTcPr()
+                    : celula.getCTTc().addNewTcPr();
+            if (tcPr.isSetVAlign()) tcPr.unsetVAlign();
+            tcPr.addNewVAlign().setVal(STVerticalJc.CENTER);
+            if (tcPr.isSetNoWrap()) tcPr.unsetNoWrap();
+
+            for (XWPFParagraph paragrafo : celula.getParagraphs()) {
+                paragrafo.setAlignment(ParagraphAlignment.CENTER);
+            }
+        }
+    }
+
     private void substituirNaLinha(XWPFTableRow linha, Map<String, String> variaveis) {
+        substituirNaLinha(linha, variaveis, false);
+    }
+
+    private void substituirNaLinha(XWPFTableRow linha, Map<String, String> variaveis, boolean resetCorBranca) {
         for (XWPFTableCell celula : linha.getTableCells()) {
             for (XWPFParagraph paragrafo : celula.getParagraphs()) {
-                substituirNoParagrafo(paragrafo, variaveis);
+                substituirNoParagrafo(paragrafo, variaveis, resetCorBranca);
             }
         }
     }
 
     private void substituirNoParagrafo(XWPFParagraph paragrafo, Map<String, String> variaveis) {
+        substituirNoParagrafo(paragrafo, variaveis, false);
+    }
+
+    private void substituirNoParagrafo(XWPFParagraph paragrafo, Map<String, String> variaveis, boolean resetCorBranca) {
         List<XWPFRun> runs = paragrafo.getRuns();
         if (runs == null || runs.isEmpty())
             return;
@@ -131,6 +179,13 @@ public class DocxTemplateAdapter implements PdfGenerator {
 
         XWPFRun primeiraRun = runs.get(0);
         primeiraRun.setText(merged, 0);
+
+        if (resetCorBranca) {
+            String corAtual = primeiraRun.getColor();
+            if ("FFFFFF".equalsIgnoreCase(corAtual) || "ffffff".equalsIgnoreCase(corAtual)) {
+                primeiraRun.setColor("000000");
+            }
+        }
 
         for (int i = 1; i < runs.size(); i++) {
             XWPFRun run = runs.get(i);
@@ -221,7 +276,7 @@ public class DocxTemplateAdapter implements PdfGenerator {
         Map<String, String> variaveis = new HashMap<>();
         variaveis.put("${nome_cliente}", o.cliente().nome());
         variaveis.put("${numero_orcamento}", o.numeroOrcamento());
-        variaveis.put("${data_orcamento}", o.dataOrcamento() != null ? o.dataOrcamento() : "");
+        variaveis.put("${data_orcamento}", formatarData(o.dataOrcamento()));
         variaveis.put("${valor_subtotal}", formatarValor(o.valorSubtotal()));
         variaveis.put("${desconto_total}", formatarValor(o.valorDesconto()));
         variaveis.put("${valor_total}", formatarValor(o.valorTotal()));
@@ -237,11 +292,21 @@ public class DocxTemplateAdapter implements PdfGenerator {
         Map<String, String> variaveis = new HashMap<>();
         variaveis.put("${itens.codigo}", "");
         variaveis.put("${itens.quantidade}", formatarQuantidade(item.quantidade()));
-        variaveis.put("${itens.produto}", item.descricao());
+        variaveis.put("${itens.produto}", item.descricao() != null ? item.descricao() : "");
         variaveis.put("${itens.preco_unitario}", formatarValor(item.precoUnitario()));
         variaveis.put("${itens.valor_total_produto}", formatarValor(item.subtotal()));
         variaveis.put("${itens.desconto_produto}", formatarValor(item.desconto()));
         return variaveis;
+    }
+
+    private String formatarData(String isoDate) {
+        if (isoDate == null || isoDate.isBlank()) return "";
+        try {
+            return LocalDate.parse(isoDate.substring(0, 10))
+                    .format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+        } catch (Exception e) {
+            return isoDate;
+        }
     }
 
     private String formatarValor(Double valor) {
