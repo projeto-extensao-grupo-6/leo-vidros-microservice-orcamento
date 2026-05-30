@@ -13,6 +13,8 @@ import org.springframework.stereotype.Component;
 
 
 import jakarta.annotation.PostConstruct;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -27,6 +29,8 @@ import java.util.Map;
 
 @Component
 public class DocxTemplateAdapter implements PdfGenerator {
+
+    private static final Logger log = LoggerFactory.getLogger(DocxTemplateAdapter.class);
 
     private final ResourceLoader resourceLoader;
 
@@ -43,14 +47,24 @@ public class DocxTemplateAdapter implements PdfGenerator {
     public void init() throws IOException {
         try (InputStream is = resourceLoader.getResource(templatePath).getInputStream()) {
             this.templateBytes = is.readAllBytes();
+            log.info("[DocxTemplate] Template carregado — path='{}' tamanho={}KB",
+                    templatePath, templateBytes.length / 1024);
         }
     }
 
     @Override
     public byte[] generateFromOrcamento(OrcamentoDTO orcamento) {
+        String numero = orcamento.numeroOrcamento();
+        Long id = orcamento.id();
+        String cliente = orcamento.cliente() != null ? orcamento.cliente().nome() : "N/A";
+        int qtdItens = orcamento.itens() != null ? orcamento.itens().size() : 0;
+
+        log.info("[DocxTemplate] Iniciando geração — numero={} id={} cliente='{}' itens={}",
+                numero, id, cliente, qtdItens);
+
+        long inicio = System.currentTimeMillis();
         try {
             XWPFDocument documento = new XWPFDocument(new ByteArrayInputStream(templateBytes));
-
             Map<String, String> variaveis = construirVariaveis(orcamento);
 
             for (XWPFParagraph paragrafo : documento.getParagraphs()) {
@@ -63,9 +77,18 @@ public class DocxTemplateAdapter implements PdfGenerator {
             }
 
             preservarBordasTabela(documento);
-            return converterParaPdf(documento);
+            byte[] pdf = converterParaPdf(documento);
+
+            long duracao = System.currentTimeMillis() - inicio;
+            log.info("[DocxTemplate] PDF gerado — numero={} id={} tamanho={}KB duracao={}ms",
+                    numero, id, pdf.length / 1024, duracao);
+
+            return pdf;
 
         } catch (Exception e) {
+            long duracao = System.currentTimeMillis() - inicio;
+            log.error("[DocxTemplate] Falha na geração — numero={} id={} duracao={}ms motivo='{}'",
+                    numero, id, duracao, e.getMessage(), e);
             throw new RuntimeException("Falha na geração do PDF via DOCX: " + e.getMessage(), e);
         }
     }
